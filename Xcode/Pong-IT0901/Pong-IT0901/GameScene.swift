@@ -12,6 +12,7 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let BallCategory: UInt32 = 0x1 << 0
+    let BrickCategory: UInt32 = 0x1 << 1
     let BottomCategory: UInt32 = 0x1 << 2
         
     var bottomPaddle: SKSpriteNode?
@@ -40,7 +41,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ball!.physicsBody!.angularDamping = 0
         ball!.physicsBody!.allowsRotation = false
         ball!.physicsBody!.categoryBitMask = BallCategory
-        ball!.physicsBody!.contactTestBitMask = BottomCategory
+        ball!.physicsBody!.contactTestBitMask = BottomCategory | BrickCategory
         
         //let smokeEmitterNode = SKEmitterNode(fileNamed: "SmokeEmitter")
         //smokeEmitterNode!.targetNode = self
@@ -66,6 +67,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             let brickNode = SKSpriteNode(color: (i % 2 == 0 ? .blue : .red), size: CGSize(width: brickWidth, height: 25))
             brickNode.position = CGPoint(x: xCoordinate, y: (self.size.height / 2) - 100)
+            
+            brickNode.physicsBody = SKPhysicsBody(rectangleOf: brickNode.size)
+            brickNode.physicsBody!.isDynamic = false
+            brickNode.physicsBody!.categoryBitMask = BrickCategory
+            brickNode.name = "brick"
             
             self.addChild(brickNode)
             
@@ -148,6 +154,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ball!.physicsBody!.velocity = CGVector(dx: 0, dy: 0)
         gameRunning = false
         
+        // Remove all bricks from the scene
+        self.enumerateChildNodes(withName: "brick") { (node, finished) in
+            node.removeFromParent()
+        }
+        
         // Unpause the view
         view!.isPaused = false
         
@@ -180,6 +191,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             print("Bottom collision")
                         
             gameOver()
+            
+        }
+        
+        else if (contact.bodyA.categoryBitMask == BrickCategory) {
+            
+            contact.bodyA.node!.removeFromParent()
+            
+        }
+        
+        else if (contact.bodyB.categoryBitMask == BrickCategory) {
+            
+            contact.bodyB.node!.removeFromParent()
             
         }
                 
