@@ -24,6 +24,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var gameRunning = false
     
     var bottomScore = 0
+    
+    var numberOfBricks = 6
+    var hitCount = 0
         
     override func didMove(to view: SKView) {
         
@@ -58,7 +61,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         bottomNode.physicsBody!.categoryBitMask = BottomCategory
         self.addChild(bottomNode)
         
-        let numberOfBricks = 6
+        generateBricks(numberOfBricks)
+        
+    }
+    
+    func generateBricks(_ numberOfBricks: Int) {
+        
         let brickWidth = self.size.width / CGFloat(numberOfBricks)
         
         for i in 0..<numberOfBricks {
@@ -159,18 +167,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             node.removeFromParent()
         }
         
+        // Re-add a new set of bricks
+        generateBricks(numberOfBricks)
+        
         // Unpause the view
         view!.isPaused = false
         
     }
     
-    func gameOver() {
+    func gameOver(hasWon: Bool) {
         
         // Pause the game
         view!.isPaused = true
         
+        // Build a message
+        var message = "You lost :("
+        
+        if hasWon {
+            message = "You won :)"
+            
+            // Update the score
+            bottomScore += 1
+            bottomScoreLabel!.text = String(bottomScore)
+            
+            // Reset hit count
+            hitCount = 0
+            
+        }
+        
         // Show an alert saying "Game Over" - you need a UIAlertController
-        let gameOverAlert = UIAlertController(title: "Game Over", message: nil, preferredStyle: .alert)
+        let gameOverAlert = UIAlertController(title: "Game Over", message: message, preferredStyle: .alert)
         let gameOverAction = UIAlertAction(title: "Okay", style: .default) { (alertAction) in
             
             // Write the code to run when the button is tapped
@@ -190,19 +216,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             print("Bottom collision")
                         
-            gameOver()
+            gameOver(hasWon: false)
             
         }
         
         else if (contact.bodyA.categoryBitMask == BrickCategory) {
             
             contact.bodyA.node!.removeFromParent()
+            hitCount += 1
+            
+            if hitCount == numberOfBricks {
+               
+                gameOver(hasWon: true)
+                
+            }
             
         }
         
         else if (contact.bodyB.categoryBitMask == BrickCategory) {
             
             contact.bodyB.node!.removeFromParent()
+            hitCount += 1
+            
+            if hitCount == numberOfBricks {
+               
+                gameOver(hasWon: true)
+                
+            }
             
         }
                 
